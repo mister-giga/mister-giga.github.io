@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="/styles/app.css">
     <script src="https://kit.fontawesome.com/299e9f0fbe.js" crossorigin="anonymous"></script>
 </head>
+
 <body>
     <div>
         <div id="root">
@@ -18,15 +20,48 @@
                 <a title="Project I have developed"><i class="fas fa-boxes"></i></a>
             </div>
             <div id="subMenu"></div>
-            <div id="page"></div>
-        </div>
-        <footer>
-            <div class="clickable">
-                <span>no problem</span>
-                <span>hahaha</span>
+            <div id="page">
+
             </div>
-            
+        </div>
+        <footer trackSizeChange>
+            <div class="flex flexRow" data-responsive-priority="3">
+                <a class="clickableContent" href="https://github.com/mister-giga/mister-giga.github.io"
+                    title="Github repo of this website">
+                    <i class="fas fa-code-branch"></i>
+                    <span>&nbsp;&nbsp;master</span>
+                </a>
+               
+                <button class="clickableContent mrH4" title="Reload current page" onclick="reload()">
+                    <i class="fas fa-sync"></i>
+                </button>
+               
+                <div class="clickableContent" title="No problems">
+                    <i class="fas fa-times-circle"></i>
+                    <span>&nbsp;&nbsp;0&nbsp;&nbsp;</span>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>&nbsp;&nbsp;0</span>
+                </div>
+            </div>
+
+            <div class="flex flexRow" data-responsive-priority="1">
+                <div class="clickableContent" title="No problems">
+                    <i class="fas fa-copyright"></i>
+                    <span class="singleLine">&nbsp;&nbsp;Giga Bokuchava 2019-2020</span>
+                </div>
+            </div>
+
+            <div class="flex flexRow" data-responsive-priority="2">
+                <div class="clickableContent" title="Leave feedback">
+                    <i class="fas fa-comment-alt"></i>
+                </div>
+                <div class="clickableContent" title="3 new notifications">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
         </footer>
     </div>
+    <script src="scripts/app.js"></script>
 </body>
+
 </html>

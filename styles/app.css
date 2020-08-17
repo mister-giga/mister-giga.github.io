@@ -1,7 +1,7 @@
 html, body {
-    margin:0;
-    padding:0;
-    height:100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
     font-family: monaco;
 }
 
@@ -11,11 +11,11 @@ body div {
     flex-direction: column;
 }
 
-body div footer{
+footer {
     background-color: #007ACC;
     color: white;
     flex-basis: 22px;
-    align-items: center;
+    align-items: stretch;
     padding-left: 22px;
     padding-right: 22px;
     flex-grow: 0;
@@ -23,6 +23,24 @@ body div footer{
     display: flex;
     flex-direction: row;
     font-size: 0.8rem;
+    justify-content: space-between;
+}
+
+.flex {
+    display: flex;
+}
+
+.flexRow {
+    flex-direction: row;
+}
+
+.flexSpaceBetween {
+    justify-content: space-between;
+}
+
+.mrH4{
+    margin-left: 4px;
+    margin-right: 4px;;
 }
 
 #root {
@@ -32,11 +50,11 @@ body div footer{
     flex-direction: row;
 }
 
-#topMenu{
+#topMenu {
     display: flex;
     background-color: #333;
     flex-basis: 50px;
-    flex-grow: 0; 
+    flex-grow: 0;
     flex-shrink: 0;
     flex-direction: column;
     align-items: center;
@@ -44,20 +62,20 @@ body div footer{
     font-size: 1.5rem;
 }
 
-#subMenu{
+#subMenu {
     display: flex;
     background-color: #252526;
     flex-basis: 250px;
-    flex-grow: 0; 
+    flex-grow: 0;
     flex-shrink: 0;
 }
 
-#page{
+#page {
     background-color: #1E1E1E;
     flex-basis: 100%;
 }
 
-#topMenu a{
+#topMenu a {
     cursor: pointer;
     height: 50px;
     position: relative;
@@ -67,15 +85,15 @@ body div footer{
     align-items: center;
 }
 
-#topMenu a:hover{
-    color:white;
-}
-
-.topMenuActive{
+#topMenu a:hover {
     color: white;
 }
 
-.topMenuActive::before{
+.topMenuActive {
+    color: white;
+}
+
+.topMenuActive::before {
     background-color: white;
     content: '';
     width: 2px;
@@ -85,21 +103,42 @@ body div footer{
     top: 0;
 }
 
-
-
-
-
-
-
-
-
+.singleLine {
+    overflow: hidden;
+    white-space: nowrap;
+}
 
 /* Utils */
-.clickable{
+
+.clickableContent {
     cursor: pointer;
     display: flex;
+    background: transparent;
     flex-direction: row;
+    align-items: center;
+    padding-left: 6px;
+    padding-right: 6px;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0px 0px 0px transparent;
+    border: 0px solid transparent;
+    text-shadow: 0px 0px 0px transparent;
 }
-.clickable:hover{
-    background-color: #ffffff55;
+
+.clickableContent:hover {
+    background: transparent;
+    background-color: #ffffff22;
+    box-shadow: 0px 0px 0px transparent;
+    border: 0px solid transparent;
+    text-shadow: 0px 0px 0px transparent;
+}
+
+.clickableContent:active {
+    outline: none;
+    border: none;
+    background-color: #ffffff44;
+}
+
+.clickableContent:focus {
+    outline: 0;
 }
