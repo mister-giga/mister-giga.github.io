@@ -1,0 +1,105 @@
+html, body {
+    margin:0;
+    padding:0;
+    height:100%;
+    font-family: monaco;
+}
+
+body div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+body div footer{
+    background-color: #007ACC;
+    color: white;
+    flex-basis: 22px;
+    align-items: center;
+    padding-left: 22px;
+    padding-right: 22px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    font-size: 0.8rem;
+}
+
+#root {
+    display: flex;
+    height: 100%;
+    flex-wrap: nowrap;
+    flex-direction: row;
+}
+
+#topMenu{
+    display: flex;
+    background-color: #333;
+    flex-basis: 50px;
+    flex-grow: 0; 
+    flex-shrink: 0;
+    flex-direction: column;
+    align-items: center;
+    color: #858585;
+    font-size: 1.5rem;
+}
+
+#subMenu{
+    display: flex;
+    background-color: #252526;
+    flex-basis: 250px;
+    flex-grow: 0; 
+    flex-shrink: 0;
+}
+
+#page{
+    background-color: #1E1E1E;
+    flex-basis: 100%;
+}
+
+#topMenu a{
+    cursor: pointer;
+    height: 50px;
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#topMenu a:hover{
+    color:white;
+}
+
+.topMenuActive{
+    color: white;
+}
+
+.topMenuActive::before{
+    background-color: white;
+    content: '';
+    width: 2px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+
+
+
+
+
+
+
+
+
+/* Utils */
+.clickable{
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+}
+.clickable:hover{
+    background-color: #ffffff55;
+}
