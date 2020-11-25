@@ -1,0 +1,367 @@
+<!DOCTYPE html> 
+<html>
+    <head>
+        <title>კალათბურთის ბურთის სროლის სიმულაცია</title>
+        <style>
+            html, body {
+                width: 100%;
+                height:100%;
+                padding: 0;
+                margin: 0;
+            }
+            .overlay{
+                position: absolute;
+                top:0px;
+                left:0px;
+            }
+        </style>
+    </head>
+    <body onresize="draw()">
+        <canvas id="canvas" style="margin-top: 30px;"></canvas>
+
+        <div style="position: absolute;top: 0px;right:0px;display: flex;flex-direction: row;" >
+            <span>გასული დრო: </span>
+            <span id="timePassed"></span>
+            <button onclick="timeScale = 1">1x</button>
+            <button onclick="timeScale = 0.5">0.5x</button>
+            <button onclick="timeScale = 0.05">0.05x</button>
+            <button onclick="start()">დაწყება</button>
+        </div>
+        
+        <div style="position: absolute;left: 0px;top: 0px;padding: 50px 10px 10px 10px;background-color: #004400DD;display: none;" id="parametersView">
+            <div style="display: flex;flex-direction: column;color:white;">
+            <label>მოთამაშის სიმაღლე: <input type="range" value="2.1" min="1.1" max="2.4" step="0.1" onchange="playerHeight = this.value*1"/> <span id="playerHeightSpan"></span> მეტრი</label>
+            <label>ნახტომის სიმაღლე<input type="range" value="0.5" min="0" max="1.5" step="0.1" onchange="playerJumpHeight = this.value*1"/> <span id="jumpHeightSpan"></span> მეტრი</label>
+            <label>მანძილი კალათამდე<input type="range" value="5" min="1" max="22" step="0.2" onchange="distanceFromBasket = this.value*1"/> <span id="distanceFromBasketSpan"></span> მეტრი</label>
+            <label>კალათის სიმაღლე<input type="range" value="3" min="1" max="5" step="0.2" onchange="basketElevation = this.value*1"/> <span id="basketElevationSpan"></span> მეტრი</label>
+            <br/>
+            <label>სროლის კუთხე: <input type="range" value="40" min="20" max="70" step="1" onchange="ballThrowAngle = this.value*1"/> <span id="throwAngleSpan"></span> გრადუსი</label>
+            <label>გასროლის სიჩქარე<input type="range" value="8" min="1" max="12" step="0.5" onchange="ballLaunchSpeed = this.value*1"/> <span id="ballLaunchSpeedSpan"></span> მეტრი/წამი</label>
+            <br/>
+            <label>სიმძიმის ძალის აჩქარება<input type="range" value="9.8" min="1" max="40" step="0.1" onchange="acceleration = this.value*1"/> <span id="accelerationSpan"></span> მეტრი/წამი<sup>2</sup></label>
+            <div style="display: flex; flex-direction: row;">
+                <button onclick="acceleration=9.8">დედამიწა</button>
+                <button onclick="acceleration=1.6">მთვარე</button>
+                <button onclick="acceleration=25">იუპიტერი</button>
+                <button onclick="acceleration=274">მზე</button>
+            </div>
+            <br/>
+        </div>
+        </div>
+
+        <button style="position: absolute;left: 0px;top: 0px;" onclick="toggle()">პარამეტრები</button>
+
+        <script>
+            var time = 0;
+            var fontSize = 14;
+            var canvas = document.getElementById("canvas");
+            var context = canvas.getContext("2d");
+            var sceneBackgroundColor = "#AAAAAA";
+
+            var playerHeigthOverWidthRatio = 3; //მოთამაშის სურათის სიმაღლის ფარდობა სიგანესთან
+            var playerHeight = 2.1; //მოთამაშის სიმაღლე მეტრებში
+            var ballThrowAngle = 40; //ბურთის ტრაექტორია ჰორიზონტის მიმართ გრადუსებში
+            var ballRadius = 0.241; //ბურთის რადიუსი მეტრებში
+            var playerJumpHeight = 0.5; //მოთამაშის ნახტომის სიმაღლე მეტრებში
+            var ballLaunchSpeed = 8; //ბურთის გასროლის სიჩქარე მეტრი/წამში
+            var distanceFromBasket = 5; //ჰორიზონტალური მანძილი მოთამაშის ცენტრსა და კალათის ცენტრს შორის მეტრებში
+            var basketDiameter = 0.46; //კალათის დიამეტრი მეტრებში
+            var basketElevation = 3.0;//კალათის ზედა სიბრტყის დაშორება მიწიდან მეტრებში
+            var acceleration = 9.8; //სიმძიმის ძალის აჩქარება მ/წმ2
+           
+            var drawBorders = true;
+            var drawSizes = true;
+            var drawPath = true;
+
+            var isPlaying = false;
+
+            var timeScale = 1;
+
+            function draw(){
+                playerHeightSpan.innerText = playerHeight;
+                throwAngleSpan.innerText = ballThrowAngle;
+                jumpHeightSpan.innerText = playerJumpHeight;
+                ballLaunchSpeedSpan.innerText = ballLaunchSpeed;
+                distanceFromBasketSpan.innerText = distanceFromBasket;
+                basketElevationSpan.innerText = basketElevation;
+                accelerationSpan.innerText = acceleration;
+                //#region ზომების გასწორება
+                canvas.width = window.innerWidth; //სახატავი სიგანის მთელ ეკრანზე ჰორიზოტალურად გაჭიმვა
+                canvas.height = window.innerHeight - 30;//სახატავი სიგანის მთელ ეკრანზე ვერტიკალურად გაჭიმვა
+
+                var canvasRect = canvas.getBoundingClientRect();
+                var canvasWidthPx = canvasRect.width; //სახატავი სივრცის სიგანე პიქსელებში
+                var canvasHeightPx = canvasRect.height; //სახატავი სივრცის სიმაღლე პიქსელებში
+                //#endregion
+                var ballThrowAngleRadians = GetRadian(ballThrowAngle);
+                var horizontalStartVelocity = ballLaunchSpeed * Math.cos(ballThrowAngleRadians);
+                var verticalStartVelocity = ballLaunchSpeed * Math.sin(ballThrowAngleRadians);
+                //#region მასშტაბირება
+                var playerWidth = playerHeight / playerHeigthOverWidthRatio;//მოთამაშის სიგანე სიმაღლიდან გამომდინარე მეტრებში
+                var maxWidth = playerWidth + distanceFromBasket + basketDiameter / 2; //სცენის სიგანე მეტრებში
+                var vertex = GetVertext(-acceleration, verticalStartVelocity, playerJumpHeight + playerHeight);
+                var maxHeight = vertex[1] + 8 * ballRadius;//სცენის სიმაღლე მეტრებში
+
+                var horizontalScale = canvasWidthPx / maxWidth; //ჰორიზონტალური მასშტაბი  პიქსელი/მეტრი
+                var verticalScale = canvasHeightPx / maxHeight; //ვერტიკალური მასშტაბი     პიქსელი/მეტრი
+
+                var scale = horizontalScale;//ვირჩევთ უდიდეს მასშტაბს რომ ორივე ღერძი პროპორციული დარჩეს და სცენა დაეტიოს ეკრანზე
+                if(scale > verticalScale){
+                    scale = verticalScale;
+                }
+
+                var maxHeightPx = maxHeight * scale; //სცენის სიმაღლე პიქსელებში
+                var maxWidthPx = maxWidth * scale; //სცენის სიგანე პიქსელებში
+                
+                var verticalInsetPx = (canvasHeightPx - maxHeightPx) / 2; //ვერტიკალური დაშორება ფანჯრის ზედა წერტილიდან სცენამდე პიქსელებში
+                var horizontalInsetPx = (canvasWidthPx - maxWidthPx) / 2; //ჰორიზონტალური დაშორება ფანჯრის მარცხენა წერტილიდან სცენამდე პიქსელებში
+
+                var playerWidthPx = playerWidth * scale; //მოთამაშის სიგანე პიქსელებში
+                var playerHeightPx = playerHeight * scale; //მოთამაშის სიმაღლე პიქსელებში
+                var playerJumpHeightPx = playerJumpHeight * scale; //მოთამაშის ნახტომის სიმაღლე პიქსელებში
+                var ballRadiusPx = ballRadius * scale;
+
+                var basketDiameterPx = basketDiameter * scale;
+                var basketElevationPx = basketElevation * scale;
+                //შენიშვნა: ნახატების ადგილმდებარეობა ეკრანზე განისაზღვრება:
+                //ჰორიზონტალურ ღერძზე -> ნახატის უკიდურესი მარცხენა წერტილიდან ეკრანის უკიდურეს მარცხენა წერტილამდე პიქსელებში
+                //ვერტიკალურ ღერძზე -> ნახატის უკიდურესი ზედა წერტილიდან ეკრანის უკიდურეს ზედა წერტილამდე პიქსელებში
+                var playerPositionTopPx = canvasHeightPx - verticalInsetPx - playerJumpHeightPx - playerHeightPx;//მოთამაშის ნახატის ზედა პოზიცია
+                var playerPositionLeftPx = horizontalInsetPx;
+                //#endregion
+
+            
+                
+
+
+                var travelTime = distanceFromBasket / horizontalStartVelocity;
+                var t = Math.min(time, travelTime);
+
+                document.getElementById('timePassed').innerText = (Math.round(t * 1000)) + ' მილი წამი';
+
+                var ballPositionX = GetBallPositionX(t, horizontalStartVelocity);//პოზიცია მეტრებში
+                var ballPositionY = GetBallPositionY(t, verticalStartVelocity, playerJumpHeight + playerHeight, -acceleration);//პოზიცია მეტრებში
+
+                var ballPositionTopPx = canvasHeightPx - verticalInsetPx - ballPositionY * scale - ballRadiusPx;
+                var ballPositionLeftPx = horizontalInsetPx + playerWidthPx + ballPositionX * scale;
+
+                var basketPositionTopPx = canvasHeightPx - verticalInsetPx - basketElevationPx;
+                var basketPositionLeftPx = canvasWidthPx - horizontalInsetPx - basketDiameterPx;
+
+
+
+                context.clearRect(0,0,canvasWidthPx, canvasHeightPx);//სახატავი სივრცის გასუფთავება
+
+                context.fillStyle = sceneBackgroundColor;
+                context.fillRect(horizontalInsetPx, verticalInsetPx, maxWidthPx, maxHeightPx)
+              
+                context.drawImage(playerImg, playerPositionLeftPx, playerPositionTopPx, playerWidthPx, playerHeightPx);
+                context.drawImage(ballImg, ballPositionLeftPx, ballPositionTopPx, ballRadiusPx, ballRadiusPx);
+                context.drawImage(basketImg, basketPositionLeftPx, basketPositionTopPx, basketDiameterPx, basketDiameterPx);
+                //console.log({ ballPositionLeftPx, ballPositionTopPx, ballRadiusPx, ballRadiusPx});
+                
+                if(drawPath){
+                    var diff = 0.01;
+                    var t0 = 0;
+                    while(t0 < travelTime){
+
+                        var ballPositionX1 = GetBallPositionX(t0, horizontalStartVelocity);//პოზიცია მეტრებში
+                        var ballPositionY1 = GetBallPositionY(t0, verticalStartVelocity, playerJumpHeight + playerHeight, -acceleration);//პოზიცია მეტრებში
+
+                        var ballPositionTopPx1 = canvasHeightPx - verticalInsetPx - ballPositionY1 * scale - ballRadiusPx + ballRadiusPx /2;
+                        var ballPositionLeftPx1 = horizontalInsetPx + playerWidthPx + ballPositionX1 * scale + ballRadiusPx / 2;
+
+                        t0 += diff;
+
+                        var ballPositionX2 = GetBallPositionX(t0, horizontalStartVelocity);//პოზიცია მეტრებში
+                        var ballPositionY2 = GetBallPositionY(t0, verticalStartVelocity, playerJumpHeight + playerHeight, -acceleration);//პოზიცია მეტრებში
+
+                        var ballPositionTopPx2 = canvasHeightPx - verticalInsetPx - ballPositionY2 * scale - ballRadiusPx + ballRadiusPx /2;
+                        var ballPositionLeftPx2 = horizontalInsetPx + playerWidthPx + ballPositionX2 * scale + ballRadiusPx / 2;
+
+                        context.beginPath();
+                        context.moveTo(ballPositionLeftPx1, ballPositionTopPx1);
+                        context.lineTo(ballPositionLeftPx2, ballPositionTopPx2);
+                        context.stroke();
+                    }
+                }
+
+                if(drawBorders){
+                    context.strokeRect(playerPositionLeftPx, playerPositionTopPx, playerWidthPx, playerHeightPx);
+                    context.strokeRect(ballPositionLeftPx, ballPositionTopPx, ballRadiusPx, ballRadiusPx);
+                    context.strokeRect(basketPositionLeftPx, basketPositionTopPx, basketDiameterPx, basketDiameterPx);
+                    context.strokeRect(horizontalInsetPx, verticalInsetPx, maxWidthPx, maxHeightPx);
+                }
+
+                if(drawSizes){
+                     drawAnnotation(ballPositionLeftPx + ballRadiusPx / 2, ballPositionTopPx + ballRadiusPx ,ballPositionLeftPx + ballRadiusPx / 2,canvasHeightPx - verticalInsetPx, scale);
+                     drawAnnotation(basketPositionLeftPx + basketDiameterPx / 2,basketPositionTopPx + basketDiameterPx,basketPositionLeftPx + basketDiameterPx / 2, canvasHeightPx - verticalInsetPx  , scale);
+                     drawAnnotation(basketPositionLeftPx + basketDiameterPx / 2, basketPositionTopPx ,basketPositionLeftPx + basketDiameterPx / 2,basketPositionTopPx + basketDiameterPx, scale);
+                    // drawAnnotation(playerPositionLeftPx + playerWidthPx / 2, playerPositionTopPx, playerPositionLeftPx + playerWidthPx / 2, playerPositionTopPx + playerHeightPx, scale);
+                    drawAnnotation(playerPositionLeftPx + playerWidthPx / 2, playerPositionTopPx + playerHeightPx, playerPositionLeftPx + playerWidthPx / 2, playerPositionTopPx + playerHeightPx + playerJumpHeightPx, scale);
+                    drawAnnotation(ballPositionLeftPx + ballRadiusPx / 2, ballPositionTopPx, ballPositionLeftPx + ballRadiusPx / 2, ballPositionTopPx + ballRadiusPx, scale);
+
+                    var bottomAnnotationY = verticalInsetPx + fontSize;
+                    drawAnnotation(horizontalInsetPx, bottomAnnotationY, horizontalInsetPx + playerWidthPx, bottomAnnotationY, scale);
+                    drawAnnotation(horizontalInsetPx + playerWidthPx, bottomAnnotationY,basketPositionLeftPx, bottomAnnotationY, scale);
+                    drawAnnotation(basketPositionLeftPx, bottomAnnotationY,basketPositionLeftPx + basketDiameterPx, bottomAnnotationY, scale);
+                    bottomAnnotationY += 2 * fontSize ;
+                    drawAnnotation(playerPositionLeftPx + ballRadiusPx / 2 + playerWidthPx, bottomAnnotationY, ballPositionLeftPx + ballRadiusPx / 2, bottomAnnotationY, scale);
+                    drawAnnotation(ballPositionLeftPx + ballRadiusPx / 2, bottomAnnotationY, canvasWidthPx - horizontalInsetPx - ballRadiusPx / 2, bottomAnnotationY, scale);
+                }
+
+                
+            }
+
+
+            function GetRadian(degree){
+                return degree * Math.PI / 180;
+            }
+
+            function GetBallPositionX(time, velocity){ //აბრუნებს ბურთის პოზიციას საწყისი წერტილიდან ჰორიზონტალური მიმართულებით დროის მიხედვით მეტრებში
+                return time * velocity;
+            }
+
+            function GetBallPositionY(time, velocity, startHeight, acceleration){//აბრუნებს ბურთის პოზიციას (მიწის დონე + ბურთის რადიუსი) ვერტიკალური მიმართულებით დროის მიხედვით მეტრებში
+                // h = h0 + Vo*t + a * t^2 /2
+                return startHeight + velocity * time + (acceleration * time ** 2) / 2;
+            }
+
+            function GetX1X2(a, b, c){
+                var discriminant = b * b - 4 * a * c;
+
+                if (discriminant > 0) {
+                    var root1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+                    var root2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+                    return [Math.min(root1, root2), Math.max(root1, root2)];
+                }
+                else {
+                    console.log("არასწორი პარამეტრი");
+                }
+            }
+
+            function GetVertext(a, b, c){
+                var x = - b / (2 * a);
+                var y = a * x ** 2 + b * x + c;
+                //console.log(y);
+                return [x,y];
+            }
+
+            function start(){
+                startTime = new Date().getTime();
+                isPlaying = true;
+            }
+
+//#region player, ball, basket images
+            var playerImg = new Image();
+            playerImg.onload = function() {
+                window.draw();
+            };
+            playerImg.src = '/player.png';
+
+            var ballImg = new Image();
+            ballImg.onload = function(){
+                window.draw();
+            };
+            ballImg.src = '/ball.png';
+
+            var basketImg = new Image();
+            basketImg.onload = function(){
+                window.draw();
+            };
+            basketImg.src = '/basket.png';
+//#endregion
+
+            var startTime = new Date().getTime();
+            setInterval(()=>
+            {
+                if(isPlaying){
+                    time = ((new Date().getTime() - startTime) / 1000) * timeScale;
+                       
+                }     draw();        
+            }, 30);
+
+            function drawAnnotation(startX, startY, endX, endY, scale){
+                
+                var distancePx = ((startX - endX) ** 2 + (startY - endY) ** 2) ** 0.5;
+                var distanceM = distancePx / scale;
+                var rounded = Math.round(distanceM * 10) / 10;
+                var text = rounded + '';
+                context.save();
+
+                var centerX = (startX + endX) / 2;
+                var centerY = (startY + endY) / 2;
+
+                
+                var deltaX = endX - startX;
+                var deltaY = endY - startY;
+                var radians = 0;
+                if(deltaX === 0){
+                    if(deltaY > 0){
+                        radians = -Math.PI / 2;
+                    } else {
+                        radians = Math.PI / 2;
+                    }
+                } else {
+                    radians = Math.asin(deltaY / deltaX);
+                }
+
+                context.font = fontSize + 'px Arial';
+
+                var size = context.measureText(text);
+                
+                context.translate(centerX,centerY);
+                context.rotate(radians);
+
+                context.beginPath();
+                context.moveTo(-distancePx/2, 0);
+                context.lineTo(-size.width/2 -2 , 0);
+                context.stroke();
+
+                context.beginPath();
+                context.moveTo(size.width/2 +2, 0);
+                context.lineTo(distancePx/2, 0);
+                context.stroke();
+
+                var radius = 3;
+                context.fillStyle = "black";
+                context.beginPath();
+                context.arc(radius - distancePx / 2 ,0, radius, 0, 2 * Math.PI);
+                context.fill();
+
+                context.beginPath();
+                context.arc(-radius + distancePx / 2 ,0, radius, 0, 2 * Math.PI);
+                context.fill();
+                
+                
+
+                context.fillStyle = sceneBackgroundColor;
+                
+                context.textAlign = "center";
+                //context.textBaseline = "middle";
+                //var inset = 2;
+                
+
+
+                
+                //context.fillRect(-inset - size.width / 2, -inset - fontSize, 2*inset + size.width,2*inset+ fontSize);
+
+                context.fillStyle = "black";
+                context.fillText(text, 0, 0);
+
+                context.restore();
+            }
+
+
+
+            function toggle(){
+                var parametersView = document.getElementById("parametersView");
+                if (parametersView.style.display === "none") {
+                    parametersView.style.display = "block";
+                } else {
+                    parametersView.style.display = "none";
+                }
+            }
+        </script>
+    </body>
+</html>
