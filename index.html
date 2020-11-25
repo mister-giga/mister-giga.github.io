@@ -46,6 +46,9 @@
                 <button onclick="acceleration=274">მზე</button>
             </div>
             <br/>
+            <label><input type="checkbox" oninput="drawBorders = this.checked"/> ჩარჩოები</label>
+            <label><input type="checkbox" onchange="drawSizes = this.checked"/> ზომები</label>
+            <label><input type="checkbox" onchange="drawPath = this.checked"/> ტრაექტორია</label>
         </div>
         </div>
 
@@ -69,9 +72,9 @@
             var basketElevation = 3.0;//კალათის ზედა სიბრტყის დაშორება მიწიდან მეტრებში
             var acceleration = 9.8; //სიმძიმის ძალის აჩქარება მ/წმ2
            
-            var drawBorders = true;
-            var drawSizes = true;
-            var drawPath = true;
+            var drawBorders = false;
+            var drawSizes = false;
+            var drawPath = false;
 
             var isPlaying = false;
 
