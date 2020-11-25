@@ -26,6 +26,7 @@
             <button onclick="timeScale = 0.5">0.5x</button>
             <button onclick="timeScale = 0.05">0.05x</button>
             <button onclick="start()">დაწყება</button>
+            <button onclick="stop()">გაჩერება</button>
         </div>
         
         <div style="position: absolute;left: 0px;top: 0px;padding: 50px 10px 10px 10px;background-color: #004400DD;display: none;" id="parametersView">
@@ -253,6 +254,10 @@
             function start(){
                 startTime = new Date().getTime();
                 isPlaying = true;
+            }
+
+            function stop(){
+                isPlaying = false;
             }
 
 //#region player, ball, basket images
